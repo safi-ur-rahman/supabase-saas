@@ -12,18 +12,24 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Task } from "../types/task.types";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import { getBadgeColor } from "../hooks/getBadgeColor";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash } from "lucide-react";
 import { TaskDeleteDialog } from "./task-delete-dialog";
 import { useState } from "react";
+import { TaskEditSheet } from "./task-edit-sheet";
 
 export const TaskList = ({ tasks }: { tasks: Task[] }) => {
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const onDeleteClick = (taskId: string) => {
-    setIsDeleteDialogOpen(true);
+  const handleSaveTask = async (updatedTask: any) => {
+    // Simulate API or Database patch mutation
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setSelectedTask(updatedTask);
+    console.log("Task successfully saved to database:", updatedTask);
   };
 
   return (
@@ -61,9 +67,18 @@ export const TaskList = ({ tasks }: { tasks: Task[] }) => {
                   {task.label}
                 </Badge>
               </TableCell>
-              <TableCell>{format(task.dueDate, "dd/MM/yyyy")}</TableCell>
+              <TableCell>
+                {task.dueDate
+                  ? format(task.dueDate, "dd/MM/yyyy")
+                  : "No due date"}
+              </TableCell>
               <TableCell className="flex items-center justify-end">
-                <Button variant="ghost" size="sm" className="px-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="px-2"
+                  onClick={() => {setSelectedTask(task); setIsEditSheetOpen(true);}}
+                >
                   <Edit className="h-4 w-4 text-gray-400" />
                   <span className="sr-only">Edit Task</span>
                 </Button>
@@ -71,7 +86,7 @@ export const TaskList = ({ tasks }: { tasks: Task[] }) => {
                   variant="ghost"
                   size="sm"
                   className="px-2"
-                  onClick={() => onDeleteClick(task.id)}
+                  onClick={() => {setSelectedTask(task); setIsDeleteDialogOpen(true);}}
                 >
                   <Trash className="h-4 w-4 text-red-400" />
                   <span className="sr-only">Delete Task</span>
@@ -85,6 +100,13 @@ export const TaskList = ({ tasks }: { tasks: Task[] }) => {
       <TaskDeleteDialog
         open={isDeleteDialogOpen}
         isOpen={setIsDeleteDialogOpen}
+      />
+
+      <TaskEditSheet
+        task={selectedTask}
+        isOpen={isEditSheetOpen}
+        onClose={() => setIsEditSheetOpen(false)}
+        onSave={handleSaveTask}
       />
     </>
   );

@@ -23,7 +23,7 @@ export const DummyTasks: TaskType[] = [
         id: "3",
         title: "Schedule dentist appointment",
         label: "Health",
-        dueDate: new Date("2024-06-25"),
+        dueDate: undefined,
         completed: false,
         createdAt: new Date("2024-06-05"),
         updatedAt: new Date("2024-06-12"),
