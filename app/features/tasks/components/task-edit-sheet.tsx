@@ -1,7 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { CalendarIcon, ImageIcon, Loader2, UploadCloud, X } from "lucide-react";
+import { CalendarIcon, Loader2, UploadCloud, X } from "lucide-react";
 import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
