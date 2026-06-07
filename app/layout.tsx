@@ -44,7 +44,7 @@ export default function RootLayout({
         geistMono.variable,
         "font-sans",
         dmSans.variable,
-        manropeHeading.variable,
+        manropeHeading.variable
       )}
       suppressHydrationWarning
     >
