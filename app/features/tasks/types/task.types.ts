@@ -8,4 +8,4 @@ export interface Task {
     updatedAt: Date;
 }
 
-export type TaskLabel = "Work" | "Personal" | "Health" | "Urgent" | string;
+export type TaskLabel = "Work" | "Personal" | "Health" | "Urgent" | "Other" | string;
