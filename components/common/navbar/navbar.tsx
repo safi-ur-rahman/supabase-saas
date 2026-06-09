@@ -1,3 +1,4 @@
+import { Account } from "@/app/features/account";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Navbar = () => {
@@ -13,8 +14,13 @@ export const Navbar = () => {
             </div>
           </div>
 
-          <div>
-            <ThemeToggle />
+          <div className="flex items-center">
+            <div>
+              <ThemeToggle />
+            </div>
+            <div>
+              <Account />
+            </div>
           </div>
         </div>
       </div>

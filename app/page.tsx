@@ -1,4 +1,4 @@
-import { Login } from "@/components/forms/auth/login";
+import { Login } from "./features/auth";
 
 export default function Home() {
   return (

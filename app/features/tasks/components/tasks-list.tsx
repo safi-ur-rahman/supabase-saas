@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Task } from "../types/task.types";
 import { format, set } from "date-fns";
-import { getBadgeColor } from "../hooks/getBadgeColor";
+import { getBadgeColor } from "../utils/getBadgeColor";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash } from "lucide-react";
 import { TaskDeleteDialog } from "./task-delete-dialog";
@@ -77,7 +77,10 @@ export const TaskList = ({ tasks }: { tasks: Task[] }) => {
                   variant="ghost"
                   size="sm"
                   className="px-2"
-                  onClick={() => {setSelectedTask(task); setIsEditSheetOpen(true);}}
+                  onClick={() => {
+                    setSelectedTask(task);
+                    setIsEditSheetOpen(true);
+                  }}
                 >
                   <Edit className="h-4 w-4 text-gray-400" />
                   <span className="sr-only">Edit Task</span>
@@ -86,7 +89,10 @@ export const TaskList = ({ tasks }: { tasks: Task[] }) => {
                   variant="ghost"
                   size="sm"
                   className="px-2"
-                  onClick={() => {setSelectedTask(task); setIsDeleteDialogOpen(true);}}
+                  onClick={() => {
+                    setSelectedTask(task);
+                    setIsDeleteDialogOpen(true);
+                  }}
                 >
                   <Trash className="h-4 w-4 text-red-400" />
                   <span className="sr-only">Delete Task</span>
