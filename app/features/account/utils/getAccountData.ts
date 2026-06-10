@@ -45,8 +45,8 @@ export async function getAccountData(): Promise<{ user: UserProfile; subscriptio
     subscription: {
       id: subRow?.id ?? "free_tier",
       userId: user.id,
-      // Map database text safely to your strict "Basic" | "Premium" type literals
-      plan: subRow?.plan === "premium" ? "Premium" : "Basic",
+      // Map database text safely to your strict "Free" | "Premium" type literals
+      plan: subRow?.plan === "premium" ? "Premium" : "Free",
       tasksCreated: subRow?.tasks_created ?? 0,
       tasksLimit: subRow?.tasks_limit ?? 10, // Default base restriction ceiling
       renewalDate: subRow?.renewal_date ? new Date(subRow.renewal_date).toLocaleDateString() : undefined,
