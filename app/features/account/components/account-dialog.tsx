@@ -12,6 +12,8 @@ import { Subscription, UserProfile } from "../types/account.types";
 import { SubscriptionDetails } from "./subscription-details";
 import { PersonalDetails } from "./personal-details";
 import { Button } from "@/components/ui/button";
+import { supabase } from "../../auth/utils/supabase";
+import { useRouter } from "next/navigation";
 
 interface AccountDialogProps {
   open: boolean;
@@ -26,6 +28,14 @@ export const AccountDialog = ({
   user,
   subscription,
 }: AccountDialogProps) => {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    isOpen(false); // Close the active drawer window
+    router.push("/"); // Evict browser target back to standard auth landing zone
+    router.refresh(); // Refresh route paths to verify layout permissions cleanups
+  };
   return (
     <Dialog open={open} onOpenChange={isOpen}>
       <DialogContent className="sm:max-w-120">
@@ -62,7 +72,7 @@ export const AccountDialog = ({
           </TabsContent>
         </Tabs>
         <DialogFooter>
-          <Button className="w-full" variant="outline">
+          <Button className="w-full" variant="outline" onClick={handleLogout}>
             Log Out
           </Button>
         </DialogFooter>

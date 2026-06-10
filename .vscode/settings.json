@@ -1,14 +1,14 @@
-{
-  "deno.enable": true,
-  "deno.lint": true,
-  "deno.unstable": true,
-  // This critical line tells VS Code to ONLY apply Deno linting inside your edge functions folder
-  "deno.suggest.imports.hosts": {
-    "https://deno.land": true,
-    "https://esm.sh": true,
-    "jsr:": true
-  },
-  "path-autocomplete.excludedAndHandledByDeno": [
-    "**"
-  ]
-}
+// {
+//   "deno.enable": true,
+//   "deno.lint": true,
+//   "deno.unstable": true,
+//   // This critical line tells VS Code to ONLY apply Deno linting inside your edge functions folder
+//   "deno.suggest.imports.hosts": {
+//     "https://deno.land": true,
+//     "https://esm.sh": true,
+//     "jsr:": true
+//   },
+//   "path-autocomplete.excludedAndHandledByDeno": [
+//     "**"
+//   ]
+// }
