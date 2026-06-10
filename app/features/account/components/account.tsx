@@ -6,7 +6,7 @@ export async function Account() {
   const accountData = await getAccountData();
 
   if (!accountData) {
-    return <p className="text-xs text-muted-foreground">Session expired</p>;
+    return <></>;
   }
 
   // Pass live, sanitized props straight down to the client layout handler
