@@ -131,6 +131,8 @@ The platform ships equipped with an integrated automation test layout suite to m
 # Execute native platform validation routines
 npm run test
 
+```
+
 ---
 
 ## 📌 Project Status Notice
