@@ -1,19 +1,21 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@14.25.0"; // Updated to a modern, stable package release
+import Stripe from "https://esm.sh/stripe@14.25.0";
 
 // Load environment variables
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") as string;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const SUPABASE_SERVICE_ROLE_KEY =
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const STRIPE_PRICE_ID = Deno.env.get("STRIPE_PRICE_ID");
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16", // Maintained your target API layout version pinned string
+  apiVersion: "2023-10-16",
 });
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 Deno.serve(async (req) => {
@@ -41,12 +43,14 @@ Deno.serve(async (req) => {
     } = await supabase.auth.getUser(authHeader);
 
     if (authError || !user) {
-      throw new Error(`Authentication validation failed: ${authError?.message ?? "User payload empty"}`);
+      throw new Error(
+        `Authentication validation failed: ${authError?.message ?? "User payload empty"}`,
+      );
     }
 
     console.log(`🔎 Target matched user reference: ${user.id}`);
 
-    // 1. Fetch Stripe Customer ID from the updated public.accounts table
+    // 1. Fetch Stripe Customer ID from public.accounts table
     const { data: account, error: accountError } = await supabase
       .from("accounts")
       .select("stripe_customer_id")
@@ -55,11 +59,9 @@ Deno.serve(async (req) => {
 
     if (accountError || !account) {
       console.error("Account fetch runtime error:", accountError);
-      throw new Error("Target user account entity footprint not found in database registry");
-    }
-
-    if (!account.stripe_customer_id) {
-      throw new Error("Stripe consumer token association missing on this record account layer");
+      throw new Error(
+        "Target user account entity footprint not found in database registry",
+      );
     }
 
     // 2. Cross-reference subscription tier status from public.account_subscriptions
@@ -68,43 +70,68 @@ Deno.serve(async (req) => {
       .select("plan, status")
       .eq("user_id", user.id)
       .eq("status", "active")
-      .maybeSingle(); // Gracefully handles if no active record row is matched directly
+      .maybeSingle();
 
     const originUrl = req.headers.get("origin") ?? "http://localhost:3000";
+    const customerId = account.stripe_customer_id;
 
-    // 3. Routing Condition: Send active premium users straight to the Billing Management Portal
-    if (subscription && subscription.plan === "premium") {
-      console.log(`🎟️ Redirecting Premium client (${user.id}) to Stripe Management Portal`);
+    // 3. Routing Condition: Send active premium users straight to Billing Management Portal
+    // (Requires an existing customerId to locate their profile)
+    if (subscription && subscription.plan === "premium" && customerId) {
+      console.log(
+        `🎟️ Redirecting Premium client (${user.id}) to Stripe Management Portal`,
+      );
       const portalSession = await stripe.billingPortal.sessions.create({
-        customer: account.stripe_customer_id,
-        return_url: `${originUrl}/profile`,
+        customer: customerId,
+        return_url: `${originUrl}/dashboard`,
       });
-      
+
       return new Response(JSON.stringify({ url: portalSession.url }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // 4. Routing Condition: Create a regular Checkout Session if they are on the free plan
-    console.log(`💳 Initializing Stripe checkout session workflow for customer: ${account.stripe_customer_id}`);
-    const checkoutSession = await stripe.checkout.sessions.create({
-      customer: account.stripe_customer_id,
+    // 4. Routing Condition: Configure Checkout Session safely for Free plan users
+    console.log(
+      `💳 Compiling Stripe checkout session parameters for user: ${user.id}`,
+    );
+
+    // Build baseline session arguments
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
+      mode: "subscription",
       line_items: [
         {
           price: STRIPE_PRICE_ID,
           quantity: 1,
         },
       ],
-      mode: "subscription",
-      success_url: `${originUrl}/profile?success=true`,
-      cancel_url: `${originUrl}/profile?canceled=true`,
-    });
+      // 🚀 CRITICAL: Bind the local user record ID so the webhook maps everything correctly on return
+      client_reference_id: user.id,
+      success_url: `${originUrl}/dashboard?success=true`,
+      cancel_url: `${originUrl}/dashboard?canceled=true`,
+    };
+
+    // Safely assign identity vectors depending on your account state
+    if (customerId) {
+      sessionConfig.customer = customerId;
+    } else {
+      console.log(
+        `✨ No Stripe Customer ID found yet. Passing email fallback: ${user.email}`,
+      );
+      sessionConfig.customer_email = user.email;
+    }
+
+    const checkoutSession =
+      await stripe.checkout.sessions.create(sessionConfig);
 
     return new Response(JSON.stringify({ url: checkoutSession.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
-    console.error("Fatal exception caught in create-stripe-session runtime block:", error.message);
+  } catch (error: any) {
+    console.error(
+      "Fatal exception caught in create-stripe-session runtime block:",
+      error.message,
+    );
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

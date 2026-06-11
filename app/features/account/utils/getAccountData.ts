@@ -28,12 +28,16 @@ export async function getAccountData(): Promise<{ user: UserProfile; subscriptio
     .eq("user_id", user.id)
     .single();
 
-  // 3. Fetch live usage limits and payment schedules via your local subscription views
+  // 3. ✨ FIXED: Only select columns that actually exist in your database schema
   const { data: subRow } = await supabase
     .from("account_subscriptions")
-    .select("id, plan, tasks_created, tasks_limit, renewal_date, created_at, updated_at")
+    .select("subscription_id, plan, status, created_at, updated_at")
     .eq("user_id", user.id)
     .maybeSingle();
+
+  // Determine current active status flags safely
+  const currentPlan = subRow?.plan?.toLowerCase() ?? "free";
+  const isPremium = currentPlan === "premium" && subRow?.status === "active";
 
   // 4. Format Postgres database values into your strictly typed TypeScript interfaces
   return {
@@ -43,13 +47,19 @@ export async function getAccountData(): Promise<{ user: UserProfile; subscriptio
       email: user.email ?? "",
     },
     subscription: {
-      id: subRow?.id ?? "free_tier",
+      // ✨ FIXED: Maps subscription_id cleanly to avoid missing column crashes
+      id: subRow?.subscription_id ?? "free_tier",
       userId: user.id,
-      // Map database text safely to your strict "Free" | "Premium" type literals
-      plan: subRow?.plan === "premium" ? "Premium" : "Free",
-      tasksCreated: subRow?.tasks_created ?? 0,
-      tasksLimit: subRow?.tasks_limit ?? 10, // Default base restriction ceiling
-      renewalDate: subRow?.renewal_date ? new Date(subRow.renewal_date).toLocaleDateString() : undefined,
+      
+      // ✨ FIXED: Check matching cases exactly ("Premium" vs "Free")
+      plan: isPremium ? "Premium" : "Free",
+      
+      // ✨ HARDCODED DEFAULT METRICS: Handled dynamically by plan type since they aren't stored in this table
+      tasksCreated: 0, 
+      tasksLimit: isPremium ? 1000 : 100, 
+      
+      renewalDate: undefined, 
+      
       createdAt: subRow?.created_at ?? new Date().toISOString(),
       updatedAt: subRow?.updated_at ?? new Date().toISOString(),
     },

@@ -12,7 +12,6 @@ export async function handleGoogleLogin() {
         redirectTo: `${origin}/auth/callback`,
         queryParams: {
           access_type: "offline",
-          prompt: "consent",
         },
       },
     });

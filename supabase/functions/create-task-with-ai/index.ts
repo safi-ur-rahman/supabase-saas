@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
       apiKey: OPENAI_API_KEY,
     });
 
-    const prompt = `Based on this task title: "${title}" and description: "${description}", suggest ONE of these labels: work, personal, priority, shopping, home. Reply with just the label word and nothing else.`;
+    const prompt = `Based on this task title: "${title}" and description: "${description}", suggest ONE of these labels: Work, Personal, Health, Study, Shopping, Urgent, Other. Reply with just the label word and nothing else.`;
 
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
     console.log(`✨ OpenAI suggested parsing metric: [${suggestedLabel}]`);
 
     // Validate if LLM structured the response array constraints accurately
-    const validLabels = ["work", "personal", "priority", "shopping", "home"];
+    const validLabels = ["Work", "Personal", "Health", "Study", "Shopping", "Urgent", "Other"];
     const targetLabel = validLabels.includes(suggestedLabel) ? suggestedLabel : null;
 
     // 3. Patch the generated analytical data tag onto our record row placeholder
@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Exception handled inside Edge Function core block:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,

@@ -1,8 +1,11 @@
+"use client";
+
 import { useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2, Sparkles, XCircle } from "lucide-react";
 import { Subscription } from "../types/account.types";
+import { supabase } from "../../auth/utils/supabase"; // Ensure this matches your browser client import path
 
 export const SubscriptionDetails = ({
   subscription,
@@ -15,32 +18,58 @@ export const SubscriptionDetails = ({
   const usagePercentage =
     (subscription.tasksCreated / subscription.tasksLimit) * 100;
 
-  // This handler is perfectly primed for your future Stripe API implementation
   const handleManageSubscription = async () => {
     setIsLoading(true);
     try {
-      if (isPremium) {
-        // TODO: Integrate Stripe Customer Portal redirect link
-        console.log(
-          "Redirecting to Stripe Customer Portal to cancel/manage...",
+      // 1. Capture the client's transient JWT session signature from local memory
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        throw new Error(
+          "Unable to read active user session profile verification.",
         );
-        // const response = await fetch('/api/stripe/portal', { method: 'POST' });
-        // const { url } = await response.json();
-        // window.location.href = url;
-      } else {
-        // TODO: Integrate Stripe Checkout link for upgrades
-        console.log(
-          "Redirecting to Stripe Checkout session for Premium upgrade...",
-        );
-        // const response = await fetch('/api/stripe/checkout', { method: 'POST' });
-        // const { url } = await response.json();
-        // window.location.href = url;
       }
 
-      // Simulating network delay for now
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    } catch (error) {
-      console.error("Stripe redirection error:", error);
+      // 2. Query your backend Supabase Edge Function endpoint array configuration
+      // Replace with your local hosting URL or production project address layout
+      const functionUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-stripe-session`;
+
+      console.log(
+        "🚀 Invoking Stripe gateway setup via secure Edge Function context...",
+      );
+      const response = await fetch(functionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Pass authorization credentials directly into the token reader
+          Authorization: `Bearer ${session.access_token}`,
+          ApiKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(
+          data.error ?? "Failed to compile background Stripe pipeline session.",
+        );
+      }
+
+      // 3. Hand over complete control to Stripe's secure window layers
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("Stripe routing destination payload returned empty.");
+      }
+    } catch (error: any) {
+      console.error(
+        "Stripe direction vector runtime exception:",
+        error.message,
+      );
+      alert(`Billing Portal error: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +129,7 @@ export const SubscriptionDetails = ({
           ) : isPremium ? (
             <>
               <XCircle className="h-4 w-4" />
-              Cancel Subscription
+              Manage or Cancel Subscription
             </>
           ) : (
             <>

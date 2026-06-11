@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation"; 
 import {
   Dialog,
   DialogContent,
@@ -13,7 +17,6 @@ import { SubscriptionDetails } from "./subscription-details";
 import { PersonalDetails } from "./personal-details";
 import { Button } from "@/components/ui/button";
 import { supabase } from "../../auth/utils/supabase";
-import { useRouter } from "next/navigation";
 
 interface AccountDialogProps {
   open: boolean;
@@ -29,13 +32,23 @@ export const AccountDialog = ({
   subscription,
 }: AccountDialogProps) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const paymentSuccess = searchParams.get("success");
+
+  useEffect(() => {
+    if (paymentSuccess === "true" && open) {
+      console.log("Payment success detected! Evicting layout cache layers...");
+      router.refresh();
+    }
+  }, [paymentSuccess, open, router]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    isOpen(false); // Close the active drawer window
-    router.push("/"); // Evict browser target back to standard auth landing zone
-    router.refresh(); // Refresh route paths to verify layout permissions cleanups
+    isOpen(false); 
+    router.push("/"); 
+    router.refresh(); 
   };
+
   return (
     <Dialog open={open} onOpenChange={isOpen}>
       <DialogContent className="sm:max-w-120">

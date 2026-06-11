@@ -10,4 +10,4 @@ export interface Task {
     updatedAt: Date;
 }
 
-export type TaskLabel = "Work" | "Personal" | "Health" | "Urgent" | "Other" | string;
+export type TaskLabel = "Work" | "Personal" | "Health" | "Study" | "Shopping" | "Urgent" | "Other" | string;
